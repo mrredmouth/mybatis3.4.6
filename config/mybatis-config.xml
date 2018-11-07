@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- properties:引用外部properties文件，下面直接用${}取值。
+			属性resource：项目内部的路径的文件，classpath
+			属性url：引入网络、磁盘路径的文件。
+			myBatis与spring整合以后，交给spring来创建datasourcce了，更好的管理，此文件便不需要le
+	 -->
+	<properties resource="jdbc.properties"></properties>
+	
+	<settings>
+	 	<!-- mapUnderscoreToCamelCase设置驼峰命名规则使用，默认为false,
+	 		  	 数据库字段student_name,对应Bean属性studentName。Mapper中的语句就会对应去找字段了
+	 		 jdbcTypeForNull,sql映射时传参为null，会默认转化为other，mysql会认，转为NULL，但是oracle不会认。
+	 	-->
+	 	<!-- <setting name="mapUnderscoreToCamelCase" value="true"/> -->
+	 	<!-- <setting name="jdbcTypeForNull" value="NULL"/> -->
+	 	<setting name="useColumnLabel" value="true"/>
+	</settings>
+	
+	<typeAliases>
+		<!-- 为类名取别名： 默认是类名,不区分大小写。
+			
+		 -->
+		<typeAlias type="com.ccg.pojo.Student" alias="stu"/>
+		<!-- 包里面的所有类取别名：别名是类名 。
+			   当包里面的存在相同的类名时，需要使用注解@Alias区分。不建议，还是用全类名比较好
+			   如果加了注解，则此类在此处的命名无效
+		 -->
+		<package name="com.ccg.pojo"/>
+	</typeAliases>
+	
+	<!-- default="development"指定使用哪种开发环境 development,test-->
+	<environments default="dev_oracle">
+		<environment id="dev_oracle">
+			<transactionManager type="JDBC"/><!-- 事务管理器类型：JDBC|MANAGE -->
+			<!-- 连接池类型：UNPOOLED不使用连接池|POOLED(PooledDataSourceFactory类的别名)使用连接池|JNDI 
+				 也可以自定义:实现DataSourceFactory接口，type是全类名 -->
+			<dataSource type="org.apache.ibatis.datasource.pooled.PooledDataSourceFactory">
+				<property name="driver" value="${oracle.driverClassName}"/>
+				<property name="url" value="${oracle.url}"/>
+				<property name="username" value="${oracle.username}"/>
+				<property name="password" value="${oracle.password}"/>
+			</dataSource>
+		</environment>
+		<environment id="dev_mysql">
+			<transactionManager type="JDBC"/>
+			<dataSource type="POOLED">
+				<property name="driver" value="${mysql.driverClassName}"/>
+				<property name="url" value="${mysql.url}"/>
+				<property name="username" value="${mysql.username}"/>
+				<property name="password" value="${mysql.password}"/>
+			</dataSource>
+		</environment>
+	</environments>
+	
+	<!-- databaseIdProvider支持多数据库厂商，
+	type="DB_VENDOR"也是别名，在org.apache.ibatis.session.Configuration类中,DB_VENDOR表示这个类VendorDatabaseIdProvider -->
+	<databaseIdProvider type="DB_VENDOR">
+		<!-- 为不同的数据库起别名,别名用于Mapper.xml中databaseId="oracle" -->
+		<property name="Mysql" value="mysql"/>
+		<property name="Oracle" value="oracle"/>
+		<property name="SQL Server" value="sqlserver"/>
+	</databaseIdProvider>
+	
+	<!-- mapper注册sql映射 -->
+	<mappers>
+		<!-- 方式一、xml方式 -->
+		<!-- <mapper resource="com/ccg/mybatis/student/StudentMapper.xml"/> -->
+		
+		<!-- 方式二、calss接口方式，条件：
+				必须有同名的StudentMapper.xml文件，与接口在同一个路径下；
+				或者没有xml，在接口的方法上加注解-->
+		<!-- <mapper class="com.ccg.mybatis.student.StudentMapper"/> -->
+		
+		<!-- 方式三、包接口方式，包里面的接口都有对应的同名xml，或者注解 -->
+		<package name="com.ccg.mybatis.student"/>
+	</mappers>
+</configuration>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ccg.mybatis.student.StudentMapper">
+	
+	<resultMap type="com.ccg.pojo.Student" id="MyStuMap">
+		<!-- id：主键，底层有优化;column数据库的列; property对象的属性名.
+			不指定列会自动对应封装，有列名不一致的用此方式。-->
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="age" property="age"/>
+	</resultMap>
+
+	<select id="selectStudent" resultType="com.ccg.pojo.Student" databaseId="oracle">
+		select * from t_student where id = #{id}
+	</select>
+	<!-- resultType为类的名;用别名的时候，注解别名优先用，然后用配置文件里typeAliases的别名 -->
+	<select id="selectStudent1" resultType="st" databaseId="oracle">
+		select * from t_student where id = #{id}
+	</select>
+	<!-- databaseId在databaseIdProvider里配置，支持多数据库 -->
+	<select id="selectStudentMysql" resultType="st" databaseId="mysql">
+		select student_id as id,student_name as name,student_age as age from t_student where student_id = #{id}
+	</select>
+	<select id="selectStudent61" resultType="com.ccg.pojo.Student" databaseId="mysql">
+		select * from t_student where id = #{id}
+	</select>
+	<select id="getStudentByIdAndName" resultType="com.ccg.pojo.Student" databaseId="oracle">
+		select * from t_student where id = #{arg0} and name = #{param2}
+	</select>
+	<!-- #,$区别：#预编译设置sql,参数地方是?,类似于PreparedStatement
+				  $直接拼装sql,类似于statement,可能会有sql注入风险。
+		但是分表操作后，语句里面表名，order by等等参数，不支持预编译#，可以用$拼接,如：
+		select * from ${year}_salary where ... order by ${name} ${order}
+				 -->
+	<select id="getStudentByIdAndName2" resultType="st">
+	<!-- ${name}不可用，前者预编译 #{id}，会认为${name}是语句结构标识符，报错 -->
+		select * from t_student where id = #{id} and name = #{name}
+	</select>
+	
+	<select id="getStudentList" resultType="st">
+		select * from t_student where name like '%'||#{name}||'%'
+	</select>
+	<select id="getStudentMapOne" resultType="map"><!-- map是mybatis给Map起的别名，包装类Integer->小写integer，基本类型int->加下划线_int -->
+		select * from t_student where id = #{id}
+	</select>
+	<select id="getStudentMap" resultType="st">
+		select * from t_student where name like #{name}
+	</select>
+	<!-- 使用resultMap自定义映射规则 -->
+	<select id="getStudentMap2" resultMap="MyStuMap">
+		select * from t_student where name like #{name}
+	</select>
+	
+	<insert id="addStudent" parameterType="com.ccg.pojo.Student" useGeneratedKeys="true" keyProperty="id">
+	<!-- 自增主键数据看mysql，可使用useGeneratedKeys="true" keyProperty="id"
+		 不支持自增oracle，需要用到序列：
+		t_student_seq.nextval序列select一次就递增一次；
+		将取出来的主键序列，封装到keyProperty，作为sql的入参id；
+		order排序，是before，则先取出nextval，再执行insert语句；
+					是after，则先执行insert，再取出currval,有多个操作时取出的值并不是本条insert数据的id
+	 -->
+		<selectKey keyProperty="id" order="BEFORE" resultType="integer">
+			select t_student_seq.nextval from dual
+		</selectKey>
+		insert into t_student(id,name,age) 
+		values(#{id},#{name},#{age})
+	</insert>
+	<insert id="addStudent2" parameterType="com.ccg.pojo.Student">
+		<selectKey keyProperty="id" order="AFTER" resultType="integer">
+			select t_student_seq.currval from dual
+		</selectKey>
+		insert into t_student(id,name,age) 
+		values(t_student_seq.nextval,#{name},#{age})
+	</insert>
+	
+	<update id="updateStudent" parameterType="com.ccg.pojo.Student">
+		update t_student 
+		set name = #{name},age = #{age}
+		where id = #{id}
+	</update>
+	<delete id="deleteStudentById">
+		delete from t_student
+		where id = #{id}
+	</delete>
+	
+</mapper>
